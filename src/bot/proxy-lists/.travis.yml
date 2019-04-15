@@ -1,0 +1,19 @@
+sudo: false
+
+addons:
+  chrome: stable
+
+language: node_js
+node_js:
+  - "10"
+  - "8"
+  - "6"
+
+before_install:
+  - npm install -g mocha
+  - npm install -g eslint
+
+env:
+  - TRAVIS_CI=1
+
+install: npm install
