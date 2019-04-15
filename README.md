@@ -6,6 +6,9 @@ Work in progress.
 
 * api -> keep proxies in memory, renew after ot renews
 * api -> multi urls input
+* api -> log results for each proxy
+* api -> prefer best proxies
+* bot -> remaining issues
 
 ## Install
 

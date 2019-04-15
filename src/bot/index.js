@@ -237,12 +237,12 @@ const normalizeTested = (done) => {
 }
 
 const run = () => {
-  /*getProxies((err, res) => {
+  getProxies((err, res) => {
     if (!err && res) {
       normalize((err, res) => {
         if (!err && res) {
           uniquify((err, res) => {
-            if (!err && res) {*/
+            if (!err && res) {
               testProxies((err, res) => {
                 if (!err && res) {
                   normalizeTested((err, res) => {
@@ -256,7 +256,7 @@ const run = () => {
                   console.log(chalk.red(err))
                 }
               })
-            /*} else {
+            } else {
               console.log(chalk.red(err))
             }
           })
@@ -267,7 +267,7 @@ const run = () => {
     } else {
       console.log(chalk.red(err))
     }
-  })*/
+  })
 }
 
 const bot = {}

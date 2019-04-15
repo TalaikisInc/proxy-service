@@ -11,4 +11,4 @@ ENV PORT 3000
 
 EXPOSE 3000
 
-CMD ["pm2-runtime", "start.js", "i", "2"]
+CMD ["pm2-runtime", "src/index.js", "i", "2"]
