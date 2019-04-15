@@ -7,7 +7,7 @@ import { isIPv4 } from 'net'
 
 import ProxyLists from './proxy-lists'
 import { read, create, readString, updateString, del } from '../db'
-import { BOT_INTERVAL } from '../config'
+import { BOT_INTERVAL, EXIT_AFTER } from '../config'
 
 const getProxies = (done) => {
   let id = 0
@@ -25,6 +25,7 @@ const getProxies = (done) => {
   }
 
   try {
+    let endTime
     const _getProxies = ProxyLists.getProxies(options)
     del('proxies', (err) => {
       if (!err || err.includes('Error deleting file')) {
@@ -45,6 +46,10 @@ const getProxies = (done) => {
         _getProxies.once('end', () => {
           done(false, 'Done.')
         })
+
+        setTimeout((() => {
+          done(false, 'Done.')
+        }), 1000 * EXIT_AFTER)
       } else {
         console.log(chalk.red(err))
       }
@@ -106,6 +111,7 @@ const uniquify = (done) => {
 }
 
 const test = (proxy, options, done) => {
+  console.log(proxy)
   try {
     const proxyRequest = request.defaults({
       proxy: `http://${proxy}`,
@@ -115,18 +121,18 @@ const test = (proxy, options, done) => {
     const startTime = new Date()
     proxyRequest(options.url, (err, res) => {
       if (err) {
-        done(true, err)
+        done(err)
       } else if (res.statusCode !== 200) {
-        done(true, err)
+        done(err)
       } else if (!res.body) {
-        done(true, 'No body.')
+        done('No body.')
       } else {
         const endTime = new Date()
         done(false, (endTime.getTime() - startTime.getTime()))
       }
     })
   } catch (e) {
-    done(true, e)
+    done(e)
   }
 }
 
@@ -142,8 +148,8 @@ const testProxies = (done) => {
           if (!err && data) {
             console.log(`Total to test: ${data.length}`)
             data.forEach((e) => {
-              test(e, { url }, (err, timeTaken) => {
-                if (!err) {
+              test(e, { url: url }, (err, timeTaken) => {
+                if (!err && timeTaken) {
                   console.log(chalk.green('Found good one.'))
                   let speed = size / (timeTaken / 1000) / 1024
                   file.write(`{"url":"${e}","speed":"${speed} Kbps"},`)
@@ -157,11 +163,11 @@ const testProxies = (done) => {
               })
             })
           } else {
-            console.log(chalk.red(err))
+            done(err)
           }
         })
       } else {
-        console.log(chalk.red(err))
+        done(err)
       }
     })
   })
@@ -185,13 +191,12 @@ const normalizeTested = (done) => {
 }
 
 const run = () => {
-  // @FIXME first one does stuck, resolve nefore going firther
-  getProxies((err, res) => {
+  /*getProxies((err, res) => {
     if (!err && res) {
       normalize((err, res) => {
         if (!err && res) {
           uniquify((err, res) => {
-            if (!err && res) {
+            if (!err && res) {*/
               testProxies((err, res) => {
                 if (!err && res) {
                   normalizeTested((err, res) => {
@@ -205,7 +210,7 @@ const run = () => {
                   console.log(chalk.red(err))
                 }
               })
-            } else {
+            /*} else {
               console.log(chalk.red(err))
             }
           })
@@ -216,7 +221,7 @@ const run = () => {
     } else {
       console.log(chalk.red(err))
     }
-  })
+  })*/
 }
 
 const bot = {}
