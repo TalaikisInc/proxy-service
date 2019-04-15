@@ -4,9 +4,8 @@ Work in progress.
 
 ## TODO
 
-* keep proxies in memory, renew after ot renews
-* async pool with testing
-* multi urls input
+* api -> keep proxies in memory, renew after ot renews
+* api -> multi urls input
 
 ## Install
 

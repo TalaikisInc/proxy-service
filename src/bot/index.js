@@ -4,10 +4,27 @@ import { join } from 'path'
 import { createWriteStream } from 'fs'
 import request from 'request'
 import { isIPv4 } from 'net'
+import asyncPool from 'tiny-async-pool'
 
 import ProxyLists from './proxy-lists'
 import { read, create, readString, updateString, del } from '../db'
 import { BOT_INTERVAL, EXIT_AFTER } from '../config'
+
+const chunks = (array, size, done) => {
+  const results = []
+  while (array.length) {
+    results.push(array.splice(0, size))
+  }
+  done(results)
+}
+
+const sleep = async (s) => {
+  return new Promise((resolve) => setTimeout(resolve, s * 1000))
+}
+
+const getRnd = (min, max) => {
+  return Math.floor(Math.random() * (max - min) + min)
+}
 
 const getProxies = (done) => {
   let id = 0
@@ -110,8 +127,7 @@ const uniquify = (done) => {
   })
 }
 
-const test = (proxy, options, done) => {
-  console.log(proxy)
+const test = async (proxy, options, done) => {
   try {
     const proxyRequest = request.defaults({
       proxy: `http://${proxy}`,
@@ -138,29 +154,59 @@ const test = (proxy, options, done) => {
 
 const testProxies = (done) => {
   const url = 'https://best.aliexpress.com/?lan=en'
+  const timeout = (i) => new Promise((resolve) => setTimeout(() => resolve(i), i))
+  const chunkSize = 10
+
   https.get(url, (res) => {
     const size = res.headers['content-length']
     del('tested', (err) => {
       if (!err || err.includes('Error deleting file')) {
         const file = createWriteStream(join(__dirname, '../../.data', 'tested.json'))
         let i = 1
-        read('unique', (err, data) => {
-          if (!err && data) {
-            console.log(`Total to test: ${data.length}`)
-            data.forEach((e) => {
-              test(e, { url: url }, (err, timeTaken) => {
-                if (!err && timeTaken) {
-                  console.log(chalk.green('Found good one.'))
-                  let speed = size / (timeTaken / 1000) / 1024
-                  file.write(`{"url":"${e}","speed":"${speed} Kbps"},`)
-                }
+        read('unique', (err, uniqueProxies) => {
+          if (!err && uniqueProxies) {
+            console.log(`Total to test: ${uniqueProxies.length}`)
+            chunks(uniqueProxies, chunkSize, async (_chunks) => {
+              if (_chunks.length > 0) {
+                let k = 1
+                let i = 1
+                for (const chunk of _chunks) {
+                  console.log(`Generating jobs for chunk id: ${k}...`)
+                  const promises = []
+                  for (const proxy of chunk) {
+                    promises.push(await test(proxy, { url: url }, (err, timeTaken) => {
+                      if (!err && timeTaken) {
+                        console.log(chalk.green('Found good one.'))
+                        let speed = size / (timeTaken / 1000) / 1024
+                        file.write(`{"url":"${proxy}","speed":"${speed} Kbps"},`)
+                      }
+                    }))
 
-                if (i === data.length) {
-                  done(false, 'Done.')
-                }
-                console.log(`${i}/${data.length}`)
-                i += 1
-              })
+                    if (promises.length === chunkSize) {
+                      console.log('Running pool...')
+                      try {
+                        await asyncPool(1, promises, timeout)
+                        i += 1
+                      } catch (e) {
+                        console.log(chalk.red(e))
+                      }
+
+                      k += 1
+
+                      const s = getRnd(5, 10)
+                      console.log(`Sleeping for ${s}...`)
+                      await sleep(s)
+                    }
+
+                    console.log(`${i}/${uniqueProxies.length}`)
+                    if (i === uniqueProxies.length) {
+                      done(false, 'Done.')
+                    }
+
+                    i += 1
+                  } // end of chunk items
+                } // end of chunks
+              }
             })
           } else {
             done(err)
