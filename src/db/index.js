@@ -2,7 +2,7 @@ import { open, unlink, ftruncate, readdir, readFile } from 'fs'
 import { join } from 'path'
 
 import { write, stringToJson } from './utils'
-const baseDir = join(__dirname, '../.data')
+const baseDir = join(__dirname, '../../.data')
 
 export const create = (file, data, done) => {
   const fileName = join(baseDir, `${file}.json`)
@@ -80,6 +80,7 @@ export const del = (file, done) => {
     if (!err) {
       done(false)
     } else {
+      // @TODO possibly discern between file doens't exist and other errors
       done('Error deleting file.')
     }
   })
