@@ -1,14 +1,20 @@
 # Proxy Service with Proxy Rotation and Testing
 
-Work in progress.
+## Features
+
+* Send the url to this API which will query resource through proxy
+* If proxy fails, next one is used
+* Only successful response is sent back
+* Generates throusands proxies and test them for usability
 
 ## TODO
 
-* api -> keep proxies in memory, renew after ot renews
+* test the rotation in larger scale production environment
+* fix proxy speed check
 * api -> multi urls input
-* api -> log results for each proxy
+* api -> log speed/ latency results for each proxy
 * api -> prefer best proxies
-* bot -> remaining issues
+* bot -> exit when freezed
 
 ## Install
 

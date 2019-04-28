@@ -5,31 +5,45 @@ import JsonMemory from 'json-memory'
 const proxies = new JsonMemory(join(__dirname, '../../.data', 'usable.json'))
 const api = {}
 
-api.get = async (url, proxies, proxyId) => {
-  let proxy = `http://${proxies[proxyId].url}`
+api.get = async (url, proxyId, done) => {
+  url = `https://${url}`
+  let entry = proxies[`${proxyId}`]
+  let proxy = `http://${entry.url}`
   require('request-promise').defaults({
     proxy: proxy,
     strictSSL: false
   })(url).then((res) => {
-    return { error: false, response: res }
-  }).catch(async () => {
+    done(false, res)
+  }).catch(async (e) => {
     proxyId += 1
-    proxy = `http://${proxies[proxyId].url}`
-    await api.get(url, proxy)
+    entry = proxies[`${proxyId}`]
+    proxy = `http://${entry.url}`
+    await api.get(url, proxyId, done)
   })
 }
 
 api.run = () => {
   polka()
-    .get('/:url', async (req, res) => {
-      const { err, data } = await api.get(req.params.url, proxies, 0)
-      if (!err && data) {
-        res.writeHead(400, { 'Content-Type': 'application/json' })
-        let json = JSON.stringify({ data })
-        res.end(json)
+    .get('/get/:url', async (req, res) => {
+      if (req.params.url) {
+        await api.get(req.params.url, 0, (err, data) => {
+          if (!err && data) {
+            res.writeHead(400, { 'Content-Type': 'application/json' })
+            let json = JSON.stringify({ data })
+            res.end(json)
+          } else {
+            res.writeHead(400, { 'Content-Type': 'application/json' })
+            let json = JSON.stringify({ error: 'Something wrong.' })
+            res.end(json)
+          }
+        }).catch((e) => {
+          res.writeHead(400, { 'Content-Type': 'application/json' })
+          let json = JSON.stringify({ error: e })
+          res.end(json)
+        })
       } else {
         res.writeHead(400, { 'Content-Type': 'application/json' })
-        let json = JSON.stringify({ error: 'Something wrong.' })
+        let json = JSON.stringify({ error: 'No URL provided.' })
         res.end(json)
       }
     })

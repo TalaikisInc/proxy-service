@@ -222,7 +222,7 @@ const testProxies = (done) => {
 const normalizeTested = (done) => {
   readString('tested', (err, data) => {
     if (!err && data) {
-      const newData = `["${data.split(',').join('')}]`.replace(',]', ']')
+      const newData = `[${data}]`.replace(',]', ']')
       create('usable', newData, (err) => {
         if (!err) {
           done(false, 'Normalized.')
