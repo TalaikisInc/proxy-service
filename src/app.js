@@ -3,7 +3,7 @@ import api from './api'
 
 const init = () => {
   api.run()
-  // bot.loop()
+  bot.loop()
 }
 
 init()
