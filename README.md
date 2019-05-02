@@ -14,7 +14,7 @@
 * api -> multi urls input
 * api -> log speed/ latency results for each proxy
 * api -> prefer best proxies
-* bot -> exit when freezed
+* api -> async batching for requests
 
 ## Install
 

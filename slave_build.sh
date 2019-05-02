@@ -1,5 +1,5 @@
 #!/bin/bash
 
-APP=$1
+APP=proxy_service
 
 docker build -t "$APP" .

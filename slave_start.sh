@@ -1,7 +1,7 @@
 #!/bin/bash
 
-APP=$1
-PORT=$2
+APP=proxy_service
+PORT=3003
 
 docker run -it -p "$PORT:3000" \
   --restart always \

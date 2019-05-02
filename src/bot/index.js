@@ -42,7 +42,6 @@ const getProxies = (done) => {
   }
 
   try {
-    let endTime
     const _getProxies = ProxyLists.getProxies(options)
     del('proxies', (err) => {
       if (!err || err.includes('Error deleting file')) {
@@ -64,9 +63,9 @@ const getProxies = (done) => {
           done(false, 'Done.')
         })
 
-        setTimeout((() => {
+        setTimeout(() => {
           done(false, 'Done.')
-        }), 1000 * EXIT_AFTER)
+        }, 1000 * EXIT_AFTER)
       } else {
         console.log(chalk.red(err))
       }
@@ -237,14 +236,19 @@ const normalizeTested = (done) => {
 }
 
 const run = () => {
+  console.log('Geeting proxies...')
   getProxies((err, res) => {
     if (!err && res) {
+      console.log('Normalizing....')
       normalize((err, res) => {
         if (!err && res) {
+          console.log('Uniquifying....')
           uniquify((err, res) => {
             if (!err && res) {
+              console.log('Testing....')
               testProxies((err, res) => {
                 if (!err && res) {
+                  console.log('Normaizing tested....')
                   normalizeTested((err, res) => {
                     if (!err && res) {
                       console.log(chalk.green('Done.'))
